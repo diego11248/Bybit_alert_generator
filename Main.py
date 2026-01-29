@@ -27,6 +27,7 @@ class Main:
         self.mode = 1  # 1 - Isolated, 0 - Cross
         self.leverage = 1
         self.day = 0;
+        self.possible_trades = []
 
     def valid_time(self, open_positions):
         curr = datetime.datetime.now(timezone.utc) # Use UTC instead of local time
@@ -40,18 +41,13 @@ class Main:
             #self.close_all(open_positions)
             print("Its the weekend")
             return False
-            
 
         if hour > 21 or hour < 12:                #edge hours for trading the last hour of trading, the first hour of trading
            
             print("Sleeping, if traders are not working you shouldnt either")
             sleep(180)
             return False
-                
-                
-           
-                
-              
+            
         else:
             print("Market is open, running bot")
             return True
@@ -77,6 +73,7 @@ class Main:
                 # Convert positions to dictionary for easy lookup
 
                 open_positions = {pos["symbol"]: pos["side"] for pos in positions}  # { "BTCUSDT": "Buy" }
+                
                 
 
 
