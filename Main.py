@@ -86,7 +86,7 @@ class Main:
                         if symbol not in open_positions:
                             continue
 
-                    signal = self.strategy.trading_strategy_rsi_macd_short(symbol)  
+                    signal = self.strategy.five_minute_reentry_check(symbol)  
                     
                     if signal == "none":
                         print(f"⏳ No signal generated")
