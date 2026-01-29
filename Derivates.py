@@ -214,12 +214,17 @@ class Derivatives:
             latest_close = float(kl_5m["Close"].iloc[-1])
             
             # Reentry from above: was above 4H high, now back inside
-            reentry_from_above = (previous_close > four_hour_high) and (latest_close <= four_hour_high)
+            reentry_from_above = (previous_close > four_hour_high) and (latest_close < four_hour_high)
             
             # Reentry from below: was below 4H low, now back inside
-            reentry_from_below = (previous_close < four_hour_low) and (latest_close >= four_hour_low)
+            reentry_from_below = (previous_close < four_hour_low) and (latest_close > four_hour_low)
             
-            return reentry_from_above, reentry_from_below
+            if reentry_from_above:
+                return "down"
+            elif reentry_from_below:
+                return "up"
+            else:
+                return "none"
         
         except Exception as err:
             print(f"⚠️ Error checking 5m reentry for {symbol}: {err}")
