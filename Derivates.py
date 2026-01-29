@@ -182,6 +182,41 @@ class Derivatives:
             traceback.print_exc()
             return None
 
+    def five_minute_breakout_check(self, symbol):
+        # Get 4H min/max first
+        four_hour_levels = self.four_hour_min_max(symbol)
+        if four_hour_levels is None:
+            return None
+        
+        four_hour_high, four_hour_low = four_hour_levels
+        
+        # Get 5-minute klines
+        kl_5m = self.klines_timeframe(symbol, 5)
+        if kl_5m is None or kl_5m.empty:
+            return None
+        
+        try:
+            # Get the most recent closed candle
+            kl_5m = kl_5m.copy()
+            kl_5m.index = pd.to_datetime(kl_5m.index, unit="ms", utc=True)
+            
+            # Sort to ensure we get the latest
+            kl_5m = kl_5m.sort_index()
+            
+            # Most recent candle close price
+            latest_close = float(kl_5m["Close"].iloc[-1])
+            
+            # Check breakout conditions
+            breakout_above = latest_close > four_hour_high
+            breakout_below = latest_close < four_hour_low
+            
+            return breakout_above, breakout_below
+        
+        except Exception as err:
+            print(f"⚠️ Error checking 5m breakout for {symbol}: {err}")
+            traceback.print_exc()
+            return None
+
         
         
 
