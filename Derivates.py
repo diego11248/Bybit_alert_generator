@@ -182,7 +182,15 @@ class Derivatives:
             traceback.print_exc()
             return None
 
-    def five_minute_breakout_check(self, symbol):
+    def five_minute_reentry_check(self, symbol):
+        """
+        Checks if the most recent 5-minute candle closed back inside the 4H range.
+        - Reentry from above: close was above 4H high, now closed below it (back inside)
+        - Reentry from below: close was below 4H low, now closed above it (back inside)
+        
+        Returns:
+            tuple: (reentry_from_above: bool, reentry_from_below: bool) or None if data unavailable
+        """
         # Get 4H min/max first
         four_hour_levels = self.four_hour_min_max(symbol)
         if four_hour_levels is None:
@@ -190,30 +198,31 @@ class Derivatives:
         
         four_hour_high, four_hour_low = four_hour_levels
         
-        # Get 5-minute klines
+        # Get 5-minute klines (need at least 2 candles to compare)
         kl_5m = self.klines_timeframe(symbol, 5)
-        if kl_5m is None or kl_5m.empty:
+        if kl_5m is None or kl_5m.empty or len(kl_5m) < 2:
             return None
         
         try:
-            # Get the most recent closed candle
+            # Prepare data
             kl_5m = kl_5m.copy()
             kl_5m.index = pd.to_datetime(kl_5m.index, unit="ms", utc=True)
-            
-            # Sort to ensure we get the latest
             kl_5m = kl_5m.sort_index()
             
-            # Most recent candle close price
+            # Get the last two candles
+            previous_close = float(kl_5m["Close"].iloc[-2])
             latest_close = float(kl_5m["Close"].iloc[-1])
             
-            # Check breakout conditions
-            breakout_above = latest_close > four_hour_high
-            breakout_below = latest_close < four_hour_low
+            # Reentry from above: was above 4H high, now back inside
+            reentry_from_above = (previous_close > four_hour_high) and (latest_close <= four_hour_high)
             
-            return breakout_above, breakout_below
+            # Reentry from below: was below 4H low, now back inside
+            reentry_from_below = (previous_close < four_hour_low) and (latest_close >= four_hour_low)
+            
+            return reentry_from_above, reentry_from_below
         
         except Exception as err:
-            print(f"⚠️ Error checking 5m breakout for {symbol}: {err}")
+            print(f"⚠️ Error checking 5m reentry for {symbol}: {err}")
             traceback.print_exc()
             return None
 
